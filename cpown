@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# copy files / folders AND change ownership 
+
+USR=""
+GRP=""
+
+SHIFT_AMT=0
+
+OPTIND=1
+while getopts ":u:g:" opt; do
+case "$opt" in
+    "u")
+        USR=${OPTARG}
+        SHIFT_AMT=$(($SHIFT_AMT + 2 ))
+        ;;
+    "g")
+        GRP=${OPTARG}
+        SHIFT_AMT=$(($SHIFT_AMT + 2 ))
+        ;;
+    \?)
+        echo "Usage: cpown -u='username' -g='group' sourse dest"
+        exit 1
+        ;;
+esac
+done
+
+shift $SHIFT_AMT
+IS_TODIR=false
+
+if [ -d $2 ]; then
+    IS_TODIR=true
+fi
+
+cp -r $1 $2
+
+if [ $? -ne 0 ]; then exit 1; fi
+
+if $IS_TODIR ; then
+    if [[ ! -z $USR ]] ; then
+        chown -R $USR "$(realpath $2)/$(basename $1)"
+    fi
+    if [[ ! -z $GRP ]] ; then
+        chgrp -R $GRP "$(realpath $2)/$(basename $1)"
+    fi
+else
+    if [[ ! -z $USR ]] ; then
+        chown -R $USR $(realpath $2)
+    fi
+    if [[ ! -z $GRP ]] ; then
+        chgrp -R $GRP $(realpath $2)
+    fi
+fi
